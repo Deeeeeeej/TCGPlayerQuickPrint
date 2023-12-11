@@ -24,44 +24,45 @@ def get_most_recent_tcgplayer_csv(directory):
 
 
 def create_pdf_from_csv(csv_path, output_path):
-    """Generate a PDF with address labels from a given CSV path."""
+    """Generate a PDF with one address per page for #6 envelopes, centered in landscape orientation."""
     
     # Read the CSV data into a DataFrame
-    print("Reading the CSV file...")
     df = pd.read_csv(csv_path)
-    print(f"Found {len(df)} addresses.")
 
-    # Initialize the canvas (PDF) with a letter page size
-    c = canvas.Canvas(output_path, pagesize=letter)
-    width, height = letter
+    # Envelope dimensions for landscape orientation
+    env_width = 6.5 * inch  # 6 1/2 inches (width)
+    env_height = 3.625 * inch  # 3 5/8 inches (height)
 
-    # Set the starting position for the address
-    x = 0.5 * inch  # Adjust as needed for horizontal positioning
-    y = height - 0.5 * inch  # Adjust as needed for vertical positioning
+    # Initialize the canvas (PDF) with the size of a #6 envelope in landscape
+    c = canvas.Canvas(output_path, pagesize=(env_width, env_height))
 
-    # Process each address and draw it on the PDF
-    print("Processing addresses...")
+    # Set font for text
+    font_size = 12
+    line_height = 14  # Adjust the line height as needed
+
+    # Process each address and draw it on a new page
     for idx, row in df.iterrows():
         address = format_address_from_row(row)
 
-        # Draw each line of the address
-        current_y = y
+        # Calculate the total height of the text block
+        text_block_height = len(address) * line_height
+
+        # Calculate the y position to start the address so it's centered
+        y_position = (env_height + text_block_height) / 2
+
         for line in address:
-            c.drawString(x, current_y, line)
-            current_y -= 0.3 * inch  # Move down for next line
+            # Center each line of the address horizontally
+            text_width = c.stringWidth(line, 'Helvetica', font_size)
+            x_position = (env_width - text_width) / 2
 
-        # Move to the next address position
-        y -= 6.5 * inch  # Adjust this value to match the height of a #6 envelope
+            c.drawString(x_position, y_position, line)
+            y_position -= line_height  # Move down for the next line
 
-        # Check if we need to start a new page
-        if y < 0:
+        # Create a new page for the next address
+        if idx < len(df) - 1:
             c.showPage()
-            y = height - 0.5 * inch  # Reset y position for the new page
-
-        print(f"Processed address {idx + 1}")
 
     c.save()
-    print(f"Addresses saved to {output_path}")
 
 def format_address_from_row(row):
     """Format an address from a DataFrame row into a list of lines."""
