@@ -1,8 +1,13 @@
 # TCGPlayer Quick Printer
+By default, the envelope scripts compare the newest ShippingExport or legacy `_TCGplayer_*.csv` file with the newest `TCGplayer_PackingSlips_*.pdf` in Downloads, then use whichever was modified most recently. A newer CSV uses the original address layout; a newer packing slip adds the IMB. Set `USE_NEW_IMB_MODE = True` to force packing-slip mode or `False` to force CSV mode.
 
 This script processes TCGPlayer CSV sales lists, generating a PDF with printable address labels. Below is a step-by-step guide to set up and run the script on your device.
 
+## Using Your Own Logo
+Run `TCGPlayerQuickPrint_NUM6_Envelope_with_logo.py` from a folder containing that script, `imb_envelope.py`, and your logo image. By default, the script looks for `logo.jpg` beside itself. Replace that file with your own JPG, or set `LOGO_FILENAME` near the top of the script to your image filename (JPG or PNG). The image is fitted within a 1.5-inch square without stretching. It follows the automatic newest-file selection above, printing an IMB when the packing-slip PDF is newer.
+
 ## 1. Installing Python Through the Windows Store
+
 a. Open the Microsoft Store on your Windows device.
 b. Search for "Python".
 c. Download and install the latest version of Python offered.
@@ -19,7 +24,7 @@ b. **Installing the Libraries**:
    - In the Command Prompt window, type the following command and then press `Enter`:
 
      ```
-     pip install pandas reportlab
+        pip install pandas reportlab pymupdf
      ```
 
    - Wait for the process to complete. Once it's done, the libraries are successfully installed.
@@ -61,7 +66,7 @@ b. **Installing the Libraries**:
    - In the Terminal window, type the following command and then press `Enter`:
 
      ```
-     pip install pandas reportlab
+   pip install pandas reportlab pymupdf
      ```
 
    - Wait for the installation process to complete. The libraries are now installed.
@@ -111,7 +116,7 @@ b. **Installing the Libraries**:
    - In the Terminal window, type the following command and then press `Enter`:
 
      ```
-     pip3 install pandas reportlab
+      pip3 install pandas reportlab pymupdf
      ```
 
    - The system will process the request, and once it's done, the libraries will be install

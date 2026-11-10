@@ -3,6 +3,9 @@ import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+from imb_envelope import draw_imb, extract_packing_slip_orders, get_most_recent_tcgplayer_input
+
+USE_NEW_IMB_MODE = None
 
 def get_most_recent_tcgplayer_csv(directory):
     """Fetch the most recent TCGPlayer CSV file from a given directory."""
@@ -11,7 +14,7 @@ def get_most_recent_tcgplayer_csv(directory):
     files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 
     # Filter out files that don't match the TCGPlayer CSV naming pattern
-    tcgplayer_files = [f for f in files if f.startswith('_TCGplayer_') and f.endswith('.csv')]
+    tcgplayer_files = [f for f in files if f.startswith(('TCGplayer_', '_TCGplayer_')) and f.endswith('.csv')]
 
     if not tcgplayer_files:
         return None
@@ -65,18 +68,36 @@ def format_address_from_row(row):
     address.append(f"{row['City']}, {row['State']} {row['PostalCode']}")
     return address
 
-downloads_folder = os.path.expanduser('~/Downloads')
-csv_path = get_most_recent_tcgplayer_csv(downloads_folder)
+def create_pdf_from_packing_slips(pdf_path, output_path):
+    orders = extract_packing_slip_orders(pdf_path)
+    c = canvas.Canvas(output_path, pagesize=letter)
+    font_size = 12
+    line_height = 0.3 * inch
+    x = 2 * inch
+    y = letter[1] - 2 * inch
 
-if csv_path:
-    # Get the directory where the script is located
+    for address, imb in orders:
+        draw_imb(c, imb, x, y + 20)
+        c.setFont("Helvetica", font_size)
+        current_y = y
+        for line in address:
+            c.drawString(x, current_y, line)
+            current_y -= line_height
+        c.showPage()
+
+    c.save()
+
+downloads_folder = os.path.expanduser('~/Downloads')
+input_type, input_name = get_most_recent_tcgplayer_input(downloads_folder, USE_NEW_IMB_MODE)
+if input_name:
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    
-    # Set the output path to be in the same directory as the script
     output_path = os.path.join(script_directory, 'addresses.pdf')
-    print(f"Output PDF will be saved to: {output_path}")
-    
-    create_pdf_from_csv(csv_path, output_path)
+    input_path = os.path.join(downloads_folder, input_name)
+    if input_type == "packing_slip":
+        print(f"Output PDF will be saved to: {output_path}")
+        create_pdf_from_packing_slips(input_path, output_path)
+    else:
+        print(f"Output PDF will be saved to: {output_path}")
+        create_pdf_from_csv(input_path, output_path)
 else:
-    print(f"downloads_folder: {downloads_folder}")
-    print("No matching CSV found.")
+    print("No matching TCGplayer shipping export or packing-slip PDF found.")
