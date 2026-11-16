@@ -59,6 +59,9 @@ def extract_packing_slip_orders(pdf_path):
         for page_number, page in enumerate(document, start=1):
             lines = [line.strip() for line in page.get_text().splitlines() if line.strip()]
             imb_indexes = [index for index, line in enumerate(lines) if IMB_PATTERN.fullmatch(line)]
+            if not imb_indexes and orders:
+                continue
+
             if len(imb_indexes) != 1:
                 raise ValueError(
                     f"Expected one 65-bar IMB on packing-slip page {page_number}; found {len(imb_indexes)}."
